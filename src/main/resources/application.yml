@@ -1,0 +1,99 @@
+server:
+  port: 7860
+
+oauth:
+  path: http://localhost:18080
+  admin:
+    client-id: security-admin-console
+  base-url: '${oauth.path}/auth'
+  realm: Push
+  authorization-grant-type: client_credentials
+  client:
+    id: push
+    name: push
+    secret: 4tqewUWBYCB8w6JzqcxfRtVVJOknHLTu
+
+spring:
+  application:
+    name: PUSH
+
+    security:
+      oauth2:
+        resource-server:
+          jwt:
+            issuer-uri: http://localhost:18080/realms/Push
+
+
+        client:
+          registration:
+            keycloak:
+              provider: keycloak
+              authorization-grant-type: client_credentials
+              client-id: push
+              client-secret: 4tqewUWBYCB8w6JzqcxfRtVVJOknHLTu
+
+          provider:
+            keycloak:
+              issuer-uri: '${spring.security.oauth2.resource-server.jwt.issuer-uri}'
+              jwk-set-uri: '${spring.security.oauth2.resource-server.jwt.issuer-uri}/protocol/openid-connect/certs'
+              token-uri: '${spring.security.oauth2.resource-server.jwt.issuer-uri}/protocol/openid-connect/token'
+
+
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+    properties:
+      hibernate.format_sql: true
+      hibernate.dialect: org.hibernate.dialect.PostgreSQL10Dialect
+
+  datasource:
+    url: jdbc:postgresql://localhost:15432/push_db
+    username: postgres
+    password: postgres
+    hikari:
+      schema:
+
+  flyway:
+    enabled: true
+    url: '${spring.datasource.url}'
+    user: '${spring.datasource.username}'
+    password: '${spring.datasource.password}'
+    schemas: '${spring.datasource.hikari.schema}'
+    baseline-on-migrate: true
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+springdoc:
+  api-docs:
+    path: /api/v1/push/api-docs
+  swagger-ui:
+    path: /api/v1/push/swagger-ui.html
+    oauth:
+      client-id: '${spring.security.oauth2.client.registration.keycloak.client-id}'
+      client-secret: '${spring.security.oauth2.client.registration.keycloak.client-secret}'
+      realm: '${spring.security.oauth2.resource-server.jwt.issuer-uri}'
+      use-pkce-with-authorization-code-grant: true
+      token-path: '${spring.security.oauth2.client.provider.keycloak.token-uri}'
+
+#  show-actuator: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    env:
+      show-values: always
+
+push:
+  keycloak:
+    auth-server-url: http://localhost:18080
+    realm: Push
+    client-id: push
+    client-secret: 4tqewUWBYCB8w6JzqcxfRtVVJOknHLTu
+    token-endpoint: '${push.keycloak.auth-server-url}/realms/${push.keycloak.realm}/protocol/openid-connect/token'
